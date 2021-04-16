@@ -35,7 +35,7 @@ KBTU_CONVERSION = {  # convert to kbtu
     'fuel_two': '???',
     'fuel_four': '???'
 }
-
+'d'
 
 def get_ll97_summary(bldgtypes, utilityconsumption):
     print(bldgtypes)
