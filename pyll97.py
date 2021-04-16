@@ -1,6 +1,10 @@
 
-### CONSTANTS ###
+'''
+LIGHTWEIGHT MODULE FOR HANDLING LL97 CALCS.
+'''
 
+
+# CO2 limits per LL97
 co2_limits = {
     'A': [0.01074, 0.0042, 0.0014],
     'B_HEALTH':	[0.02381, 0.0133, 0.0014],
@@ -40,11 +44,10 @@ native_to_kbtu_conversion = {
 fine_per_ton_co2 = 268
 
 
-
 def get_total_area(bldgtypes):
     area = 0
     for t in bldgtypes:
-        area += t['area']
+        area += t[1]
     return area
 
 
@@ -54,10 +57,8 @@ def get_carbon_limits(bldgtypes):
     limit_2034 = 0
 
     for t in bldgtypes:
-        tag = t['type']
-        area = t['area']
+        tag, area = t
         limits = co2_limits[tag]
-
         limit_2024 += area * limits[0]
         limit_2030 += area * limits[1]
         limit_2034 += area * limits[2]
@@ -88,17 +89,49 @@ def get_fines(limits, total_carbon):
     return fines
 
 
+def validate_building_types(types):
+    isvalid = True
+    for t in types:
+        if t[0] not in co2_limits:
+            isvalid = False
+    return isvalid
+
+
 def get_ll97_summary(bldgtypes, utilityconsumption):
     '''
     main function. 
-    
+
     arguments:
-    - bldgtypes: list of dictionaries with 'type' and 'area' keys
-    - utilityconsumption: dictionary with 'elec', 'gas', 'steam', 'fuel_two', 'fuel_four' keys
+    - bldgtypes: list of iterables (list or tuple) containing 'type' (str) followed by 'area' (int/float) 
+    - utilityconsumption: dictionary with any of 'elec', 'gas', 'steam', 'fuel_two', 'fuel_four' keys
+
+    valid building types:
+    A, B_HEALTH, B_REGULAR, E, F, H, I1, I2, I3, I4, M, R1, R2, S, U
+
+    example: 
+
+    mybldgareas = [
+            ('I4', 22000),
+            ('B_REGULAR', 3340)
+    ]
+
+    myutilities = {
+        'elec': 1133334, 
+        'gas': 3432, 
+        'steam': 43,
+        'fuel_two': 4443, 
+    }
+
+    results = pyll97.get_ll97_summary(mybldgareas, myutilities)
 
     returns: summary dictionary with fines, limits and total carbon.
-
     '''
+
+    if not validate_building_types(bldgtypes):
+        raise ValueError(
+            f'incorrect building types passed. valid types: {[x for x in co2_limits.keys()]}'
+        )
+
     limits = get_carbon_limits(bldgtypes)
     total_carbon = get_total_carbon(utilityconsumption)
     fines = get_fines(limits, total_carbon)
@@ -118,4 +151,3 @@ def get_ll97_summary(bldgtypes, utilityconsumption):
         }
 
     return summary
-
