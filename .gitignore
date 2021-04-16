@@ -1,4 +1,4 @@
 .vscode
 .venv
 .ipynb_checkpoints
-.__pycache__
+__pycache_
